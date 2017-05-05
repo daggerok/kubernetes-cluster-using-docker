@@ -15,8 +15,8 @@ before_install:
 script:
   - cp -Rf gradle.properties.default gradle.properties
   - gradle clean build
-  - gradle buildImage || true
 after_script:
+  - gradle buildImage || true
   - gradle --stop
 cache:
   directories:

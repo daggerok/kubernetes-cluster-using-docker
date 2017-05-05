@@ -32,10 +32,6 @@ import com.bmuschko.gradle.docker.tasks.image.*
 // DockerPullImage
 // DockerRemoveImage
 import com.bmuschko.gradle.docker.tasks.container.*
-
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
-
 // DockerCreateContainer
 // DockerStartContainer
 // DockerStopContainer
