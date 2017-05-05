@@ -1,11 +1,11 @@
 = kubernetes-cluster-using-docker (minikube) image:https://travis-ci.org/daggerok/kubernetes-cluster-using-docker.svg?branch=master["build status", link="https://travis-ci.org/daggerok/kubernetes-cluster-using-docker"]
 
-. java
+* java
 [source,bash]
 ----
 gradle clean build
 ----
-. docker
+* docker
 [source,bash]
 ----
 gradle buildImage
