@@ -1,0 +1,2 @@
+rootProject.name = 'kubernetes-cluster-using-docker'
+includeBuild 'microservice'

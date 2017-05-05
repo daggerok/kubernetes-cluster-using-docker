@@ -1,0 +1,149 @@
+plugins {
+    id 'idea'
+    id 'eclipse'
+    id 'com.bmuschko.docker-remote-api' version '3.0.6'
+}
+
+repositories {
+    mavenCentral()
+}
+
+version '0.0.1'
+group 'daggerok'
+
+['clean', 'assemble', 'test', 'build'].each { taskName ->
+    tasks.create(taskName) { task ->
+        ['microservice'].each { service ->
+            dependsOn gradle.includedBuild(service).task(":$taskName")
+        }
+    }
+}
+
+// Read plugin documentation here:
+// http://bmuschko.github.io/gradle-docker-plugin/docs/groovydoc/com/bmuschko/gradle/docker/tasks/image/Dockerfile.html
+
+def jarFilename = "microservice-0.0.1.jar"
+
+import com.bmuschko.gradle.docker.tasks.image.*
+// Dockerfile
+// DockerBuildImage
+// DockerCommitImage
+// DockerPushImage
+// DockerPullImage
+// DockerRemoveImage
+import com.bmuschko.gradle.docker.tasks.container.*
+
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+
+// DockerCreateContainer
+// DockerStartContainer
+// DockerStopContainer
+
+task createDockerfile(type: Dockerfile) {
+    destFile = project.file './Dockerfile'
+    from 'anapsix/alpine-java:8u131b11_server-jre_unlimited' // from 'java:8'
+    maintainer 'Maksim Kostromin "daggerok@gmail.com"'
+    exposePort 8080
+    volume '/tmp'
+    copyFile 'microservice/build/libs/', '/opt/'
+    entryPoint 'java', '-Djava.security.egd=file:/dev/./urandom', '-jar', "/opt/$jarFilename"
+}
+
+def image, repo
+
+task checkCreds(type: Task, dependsOn: ['pushImage', 'pullImage']) {
+
+    if (!project.hasProperty('dockerHubUsername')
+            || !project.hasProperty('dockerHubPassword')
+            || !project.hasProperty('dockerHubEmail')) {
+
+        throw new GradleException('update your credentials in ./gradle.properties file within required information')
+    }
+
+    def username = project.property('dockerHubUsername')
+
+    image = "$username/${project.name}:$project.version"
+    repo = "$username/$project.name"
+}
+
+docker {
+    //// not worked on linux
+    // url = 'http://localhost:2375'
+    url = 'unix:///var/run/docker.sock'
+
+    registryCredentials {
+        url = 'https://index.docker.io/v1/'
+        username = project.hasProperty('dockerHubUsername') ? project.property('dockerHubUsername') : null
+        password = project.hasProperty('dockerHubPassword') ? project.property('dockerHubPassword') : null
+        email = project.hasProperty('dockerHubEmail') ? project.property('dockerHubEmail') : null
+    }
+}
+
+
+docker {
+    //// not worked on linux
+    // url = 'http://localhost:2375'
+    url = 'unix:///var/run/docker.sock'
+
+    registryCredentials {
+        url = 'https://index.docker.io/v1/'
+        username = project.hasProperty('dockerHubUsername') ? project.property('dockerHubUsername') : null
+        password = project.hasProperty('dockerHubPassword') ? project.property('dockerHubPassword') : null
+        email = project.hasProperty('dockerHubEmail') ? project.property('dockerHubEmail') : null
+    }
+}
+
+task buildImage(type: DockerBuildImage) {
+    dependsOn createDockerfile
+    inputDir = createDockerfile.destFile.parentFile
+    tag = image
+    remove = true
+}
+
+task createContainer(type: DockerCreateContainer) {
+    imageId = image
+    cmd = ['true'] as String[]
+}
+
+task commitImage(type: DockerCommitImage) {
+    dependsOn createContainer
+    repository = repo
+    targetContainerId { createContainer.getContainerId() }
+}
+
+task pushImage(type: DockerPushImage) {
+    dependsOn commitImage
+    imageName = image
+}
+
+task startContainer(type: DockerStartContainer) {
+    dependsOn createContainer
+    targetContainerId { createContainer.getContainerId() }
+}
+
+task stopContainer(type: DockerStopContainer) {
+    targetContainerId { createContainer.getContainerId() }
+}
+
+task removeContainer(type: DockerRemoveContainer) {
+    targetContainerId { createContainer.getContainerId() }
+    removeVolumes = true
+    force = true
+    shouldRunAfter stopContainer
+}
+
+test {
+    dependsOn startContainer
+    finalizedBy stopContainer, removeContainer
+}
+
+task pullImage(type: DockerPullImage) {
+    repository = repo
+    tag = "$version"
+}
+
+task removeImage(type: DockerRemoveImage) {
+    imageId = image
+    force = true
+}

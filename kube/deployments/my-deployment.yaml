@@ -1,0 +1,16 @@
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: my-deployment
+spec:
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        type: backend
+    spec:
+      containers:
+      - name: my-deployment
+        image: daggerok/kubernetes-cluster-using-docker:0.0.1
+        ports:
+        - containerPort: 8080

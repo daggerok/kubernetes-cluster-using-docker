@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: my-other-microservice
+spec:
+  containers:
+  - name: my-other-microservice
+    image: daggerok/kubernetes-cluster-using-docker:0.0.1

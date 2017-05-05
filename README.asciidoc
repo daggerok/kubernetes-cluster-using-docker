@@ -1,0 +1,115 @@
+= kubernetes-cluster-using-docker image:https://travis-ci.org/daggerok/kubernetes-cluster-using-docker.svg?branch=master["build status", link="https://travis-ci.org/daggerok/kubernetes-cluster-using-docker"]
+
+in progress...
+
+1. java
+
+[source,bash]
+----
+gradle clean build
+----
+
+2. docker
+
+[source,bash]
+----
+gradle buildImage
+gradle pushImage
+# ...
+# Pushing image with name 'daggerok/kubernetes-cluster-using-docker:0.0.1'
+
+# other tasks:
+gradle createDockerfile
+gradle createContainer
+gradle startContainer
+gradle test
+gradle pullImage
+gradle commitImage
+gradle removeImage
+----
+
+3. kubernetes
+
+[source,bash]
+----
+minikube start
+kubectl run my-microservice --image=daggerok/kubernetes-cluster-using-docker:0.0.1 --port=8080
+kubectl get pods
+kubectl get deployments
+kubectl expose deployment my-microservice --type=NodePort
+kubectl get services
+minikube service my-microservice --url
+----
+
+4. testing scale out
+
+[source,bash]
+----
+curl $(minikube service my-microservice --url)
+{"message":"hello my-microservice-1138893320-n057p : 172.17.0.6"}
+
+kubectl autoscale deployment my-microservice --min=3 --max=10
+
+kubectl get pods
+NAME                               READY     STATUS    RESTARTS   AGE
+my-microservice-1138893320-bv7f0   1/1       Running   0          8m
+my-microservice-1138893320-n057p   1/1       Running   0          1m
+my-microservice-1138893320-z60zx   1/1       Running   0          1m
+
+curl $(minikube service my-microservice --url)
+{"message":"hello my-microservice-1138893320-bv7f0 : 172.17.0.2"}
+curl $(minikube service my-microservice --url)
+{"message":"hello my-microservice-1138893320-n057p : 172.17.0.6"}
+curl $(minikube service my-microservice --url)
+{"message":"hello my-microservice-1138893320-z60zx : 172.17.0.5"}
+curl $(minikube service my-microservice --url)
+{"message":"hello my-microservice-1138893320-n057p : 172.17.0.6"}
+----
+
+5. using yaml-files
+
+[source,bash]
+----
+kubectl create -f kube/pods/my-other-microservice.yaml
+kubectl delete pod my-other-microservice
+----
+
+[source,bash]
+----
+kubectl create -f kube/deployments/my-deployment.yaml
+kubectl expose deployment my-deployment --type=NodePort
+
+curl (minikube service my-deployment --url)
+{"message":"hello my-deployment-3923582549-902k6 : 172.17.0.2"}
+curl (minikube service my-deployment --url)
+{"message":"hello my-deployment-3923582549-902k6 : 172.17.0.2"}
+curl (minikube service my-deployment --url)
+{"message":"hello my-deployment-3923582549-q7l2b : 172.17.0.5"}
+
+kubectl delete -f kube/deployments/my-deployment.yaml
+----
+
+6. cleanup
+
+[source,bash]
+----
+kubectl delete services my-microservice
+kubectl delete deployments my-microservice
+minikube stop
+# docker rm -f (docker ps -a|grep -v CONTAINER|awk '{print $1}')
+# docker rmi -f (docker images|grep -v TAG|awk '{print $3}')
+docker system prune --all
+----
+
+7. other gradle tasks
+
+[source,bash]
+----
+gradle createDockerfile
+gradle createContainer
+gradle startContainer
+gradle test
+gradle pullImage
+gradle commitImage
+gradle removeImage
+----
