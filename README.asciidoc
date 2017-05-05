@@ -1,7 +1,5 @@
 = kubernetes-cluster-using-docker image:https://travis-ci.org/daggerok/kubernetes-cluster-using-docker.svg?branch=master["build status", link="https://travis-ci.org/daggerok/kubernetes-cluster-using-docker"]
 
-in progress...
-
 1. java
 
 [source,bash]
@@ -17,15 +15,6 @@ gradle buildImage
 gradle pushImage
 # ...
 # Pushing image with name 'daggerok/kubernetes-cluster-using-docker:0.0.1'
-
-# other tasks:
-gradle createDockerfile
-gradle createContainer
-gradle startContainer
-gradle test
-gradle pullImage
-gradle commitImage
-gradle removeImage
 ----
 
 3. kubernetes
